@@ -12,6 +12,50 @@ Just add JXMagicObject.h and JXMagicObject.m to your project.
 If you are including JXMagicObject in a project that uses Automatic Reference Counting (ARC) enabled, you will need to set the -fno-objc-arc compiler flag on the two source files. To do this in Xcode, go to your active target and select the "Build Phases" tab. Now select JXMagicObject.h and JXMagicObject.m source files, press Enter, insert -fno-objc-arc and then "Done" to disable ARC.
 
 
+## How it works
+
+At initialization JXMagicObject take all values from the dictionary and populate instance variable, accordingly to the map scheme.
+
+If property key and dictionary key are the same, you have nothing to do, it just works.
+But sometimes you want a property key different, for exemple if you don't like those underscore there is in the dictionary's keys. 
+
+Just override **-setupMappings** and use **-mapProperty:toKey:**
+```objective-c
+[self mapProperty:@"favoriteNumber" toKey:@"favorite_number"];
+```
+
+### Dynamic vs Synthesized properties
+
+Synthesized properties :
+- At initialization : values are taken from dictionary and are put in instance variables.
+- You can use your getters and setters as many time as you want, the dictionary will not be solicited.
+- When you call -dictionary, values are taken from instance variables and are put back to the dictionary.
+- They are great if you need to access often to your properties (using getters and setters), because the whole transform process will not be done until you call -dictionary.
+
+For dynamic properties :
+- There is no instance variables.
+- Using getters is like sending a **-objectForKey:** message on the dictionary. Same thing for the setter and **-setObject:forKey:** – except that values are transformed.
+- They are great if you need to access often to your dictionary, because the whole transform process will be done only if you use getters and setters.
+
+### Value Transformers
+
+JXMagicObject can automagically transform dictionary values to match your property declarations. You have nothing to do.
+Supported classes are **NSString, NSNumber, NSArray, NSDictionary, NSURL,** and **NSDate** (if the value is a timestamp).
+
+Supported types are : **int, float, double, BOOL, NSInteger, long, long long, NSInteger, CGFloat,** and **NSTimeInterval**.
+
+Moreover if your property is a subclass of JXMagicObject, it will be automagically transformed too.
+
+
+But if you want to use another kind of object (NSDate, NSData, UIImage, CGRect, whatever) you can use a [NSValueTransformer](http://developer.apple.com/library/mac/#documentation/Cocoa/Reference/Foundation/Classes/NSValueTransformer_Class/Reference/Reference.html) subclass and map your property using -mapProperty:toKey:usingValueTransformer:
+```objective-c
+    JXStringToDateValueTransformer *transformer = [JXStringToDateValueTransformer new];
+    
+    [self mapProperty:@"birthdate" toKey:@"birth_date" usingValueTransformer:transformer];
+    
+    [transformer release];
+```
+
 ## Usage Example
 
 #### Setup
@@ -94,51 +138,6 @@ Dictionary : {
     name = "Jerome";
 }
 ```
-
-## How it works
-
-At initialization JXMagicObject take all values from the dictionary and populate instance variable, accordingly to the map scheme.
-
-If property key and dictionary key are the same, you have nothing to do, it just works.
-But sometimes you want a property key different, for exemple if you don't like those underscore there is in the dictionary's keys. 
-
-Just override **-setupMappings** and use **-mapProperty:toKey:**
-```objective-c
-[self mapProperty:@"favoriteNumber" toKey:@"favorite_number"];
-```
-
-### Dynamic vs Synthesized properties
-
-Synthesized properties :
-- At initialization : values are taken from dictionary and are put in instance variables.
-- You can use your getters and setters as many time as you want, the dictionary will not be solicited.
-- When you call -dictionary, values are taken from instance variables and are put back to the dictionary.
-- They are great if you need to access often to your properties (using getters and setters), because the whole transform process will not be done until you call -dictionary.
-
-For dynamic properties :
-- There is no instance variables.
-- Using getters is like sending a **-objectForKey:** message on the dictionary. Same thing for the setter and **-setObject:forKey:** – except that values are transformed.
-- They are great if you need to access often to your dictionary, because the whole transform process will be done only if you use getters and setters.
-
-### Value Transformers
-
-JXMagicObject can automagically transform dictionary values to match your property declarations. You have nothing to do.
-Supported classes are **NSString, NSNumber, NSArray, NSDictionary, NSURL,** and **NSDate** (if the value is a timestamp).
-
-Supported types are : **int, float, double, BOOL, NSInteger, long, long long, NSInteger, CGFloat,** and **NSTimeInterval**.
-
-Moreover if your property is a subclass of JXMagicObject, it will be automagically transformed too.
-
-
-But if you want to use another kind of object (NSDate, NSData, UIImage, CGRect, whatever) you can use a [NSValueTransformer](http://developer.apple.com/library/mac/#documentation/Cocoa/Reference/Foundation/Classes/NSValueTransformer_Class/Reference/Reference.html) subclass and map your property using -mapProperty:toKey:usingValueTransformer:
-```objective-c
-    JXStringToDateValueTransformer *transformer = [JXStringToDateValueTransformer new];
-    
-    [self mapProperty:@"birthdate" toKey:@"birth_date" usingValueTransformer:transformer];
-    
-    [transformer release];
-```
-
 
 ## License 
 MIT License.
