@@ -73,7 +73,7 @@ Just subclass JXMagicObject and add your properties :
 ```objective-c
 @interface JXUser : JXMagicObject
 
-@property (nonatomic, assign) NSString *firstName;
+@property (nonatomic, retain) NSString *firstName;
 @property (nonatomic, retain) NSString *lastName;
 @property (nonatomic, retain) NSDate *birthdate;
 @property (nonatomic, assign) NSInteger favoriteNumber;
