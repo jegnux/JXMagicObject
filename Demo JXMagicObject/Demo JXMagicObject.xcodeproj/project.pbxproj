@@ -1,0 +1,266 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		87A7EB0B15C402B400DEAEFB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87A7EB0A15C402B400DEAEFB /* Foundation.framework */; };
+		87A7EB0E15C402B400DEAEFB /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 87A7EB0D15C402B400DEAEFB /* main.m */; };
+		87A7EB1B15C402DD00DEAEFB /* JXMagicObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 87A7EB1A15C402DD00DEAEFB /* JXMagicObject.m */; };
+		87A7EB2415C4063D00DEAEFB /* JXGithubAccount.m in Sources */ = {isa = PBXBuildFile; fileRef = 87A7EB2315C4063D00DEAEFB /* JXGithubAccount.m */; };
+		87A7EB2915C406E700DEAEFB /* JXStringToDateValueTransformer.m in Sources */ = {isa = PBXBuildFile; fileRef = 87A7EB2615C406E700DEAEFB /* JXStringToDateValueTransformer.m */; };
+		87A7EB2A15C406E700DEAEFB /* JXUser.m in Sources */ = {isa = PBXBuildFile; fileRef = 87A7EB2815C406E700DEAEFB /* JXUser.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		87A7EB0415C402B400DEAEFB /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		87A7EB0615C402B400DEAEFB /* Demo JXMagicObject */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Demo JXMagicObject"; sourceTree = BUILT_PRODUCTS_DIR; };
+		87A7EB0A15C402B400DEAEFB /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		87A7EB0D15C402B400DEAEFB /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		87A7EB1015C402B400DEAEFB /* Demo JXMagicObject-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Demo JXMagicObject-Prefix.pch"; sourceTree = "<group>"; };
+		87A7EB1915C402DD00DEAEFB /* JXMagicObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JXMagicObject.h; sourceTree = "<group>"; };
+		87A7EB1A15C402DD00DEAEFB /* JXMagicObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JXMagicObject.m; sourceTree = "<group>"; };
+		87A7EB2215C4063C00DEAEFB /* JXGithubAccount.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JXGithubAccount.h; sourceTree = "<group>"; };
+		87A7EB2315C4063D00DEAEFB /* JXGithubAccount.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JXGithubAccount.m; sourceTree = "<group>"; };
+		87A7EB2515C406E700DEAEFB /* JXStringToDateValueTransformer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JXStringToDateValueTransformer.h; sourceTree = "<group>"; };
+		87A7EB2615C406E700DEAEFB /* JXStringToDateValueTransformer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JXStringToDateValueTransformer.m; sourceTree = "<group>"; };
+		87A7EB2715C406E700DEAEFB /* JXUser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JXUser.h; sourceTree = "<group>"; };
+		87A7EB2815C406E700DEAEFB /* JXUser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JXUser.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		87A7EB0315C402B400DEAEFB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87A7EB0B15C402B400DEAEFB /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		87A7EAFB15C402B400DEAEFB = {
+			isa = PBXGroup;
+			children = (
+				87A7EB0C15C402B400DEAEFB /* Demo JXMagicObject */,
+				87A7EB0915C402B400DEAEFB /* Frameworks */,
+				87A7EB0715C402B400DEAEFB /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		87A7EB0715C402B400DEAEFB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				87A7EB0615C402B400DEAEFB /* Demo JXMagicObject */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		87A7EB0915C402B400DEAEFB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				87A7EB0A15C402B400DEAEFB /* Foundation.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		87A7EB0C15C402B400DEAEFB /* Demo JXMagicObject */ = {
+			isa = PBXGroup;
+			children = (
+				87A7EB1815C402DD00DEAEFB /* JXMagicObject */,
+				87A7EB2515C406E700DEAEFB /* JXStringToDateValueTransformer.h */,
+				87A7EB2615C406E700DEAEFB /* JXStringToDateValueTransformer.m */,
+				87A7EB2715C406E700DEAEFB /* JXUser.h */,
+				87A7EB2815C406E700DEAEFB /* JXUser.m */,
+				87A7EB2215C4063C00DEAEFB /* JXGithubAccount.h */,
+				87A7EB2315C4063D00DEAEFB /* JXGithubAccount.m */,
+				87A7EB0D15C402B400DEAEFB /* main.m */,
+				87A7EB0F15C402B400DEAEFB /* Supporting Files */,
+			);
+			path = "Demo JXMagicObject";
+			sourceTree = "<group>";
+		};
+		87A7EB0F15C402B400DEAEFB /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				87A7EB1015C402B400DEAEFB /* Demo JXMagicObject-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		87A7EB1815C402DD00DEAEFB /* JXMagicObject */ = {
+			isa = PBXGroup;
+			children = (
+				87A7EB1915C402DD00DEAEFB /* JXMagicObject.h */,
+				87A7EB1A15C402DD00DEAEFB /* JXMagicObject.m */,
+			);
+			name = JXMagicObject;
+			path = ../../JXMagicObject;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		87A7EB0515C402B400DEAEFB /* Demo JXMagicObject */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 87A7EB1515C402B400DEAEFB /* Build configuration list for PBXNativeTarget "Demo JXMagicObject" */;
+			buildPhases = (
+				87A7EB0215C402B400DEAEFB /* Sources */,
+				87A7EB0315C402B400DEAEFB /* Frameworks */,
+				87A7EB0415C402B400DEAEFB /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Demo JXMagicObject";
+			productName = "Demo JXMagicObject";
+			productReference = 87A7EB0615C402B400DEAEFB /* Demo JXMagicObject */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		87A7EAFD15C402B400DEAEFB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0440;
+				ORGANIZATIONNAME = "Jérôme Alves";
+			};
+			buildConfigurationList = 87A7EB0015C402B400DEAEFB /* Build configuration list for PBXProject "Demo JXMagicObject" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 87A7EAFB15C402B400DEAEFB;
+			productRefGroup = 87A7EB0715C402B400DEAEFB /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				87A7EB0515C402B400DEAEFB /* Demo JXMagicObject */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		87A7EB0215C402B400DEAEFB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87A7EB0E15C402B400DEAEFB /* main.m in Sources */,
+				87A7EB1B15C402DD00DEAEFB /* JXMagicObject.m in Sources */,
+				87A7EB2415C4063D00DEAEFB /* JXGithubAccount.m in Sources */,
+				87A7EB2915C406E700DEAEFB /* JXStringToDateValueTransformer.m in Sources */,
+				87A7EB2A15C406E700DEAEFB /* JXUser.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		87A7EB1315C402B400DEAEFB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		87A7EB1415C402B400DEAEFB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		87A7EB1615C402B400DEAEFB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Demo JXMagicObject/Demo JXMagicObject-Prefix.pch";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		87A7EB1715C402B400DEAEFB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Demo JXMagicObject/Demo JXMagicObject-Prefix.pch";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		87A7EB0015C402B400DEAEFB /* Build configuration list for PBXProject "Demo JXMagicObject" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87A7EB1315C402B400DEAEFB /* Debug */,
+				87A7EB1415C402B400DEAEFB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		87A7EB1515C402B400DEAEFB /* Build configuration list for PBXNativeTarget "Demo JXMagicObject" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87A7EB1615C402B400DEAEFB /* Debug */,
+				87A7EB1715C402B400DEAEFB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 87A7EAFD15C402B400DEAEFB /* Project object */;
+}
