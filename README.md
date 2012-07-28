@@ -1,7 +1,16 @@
 JXMagicObject
 =============
 
-Magically map your dictionaries keys/values to a true object instance.
+Magically map your dictionaries keys/values to a true object with properties.
+Instead of 
+```objective-c
+[dictionary setObject:bar forKey:@"foo"];
+```
+Just do 
+```objective-c
+[magicObject setFoo:bar];
+```
+
 
 ## Installation
 
@@ -17,7 +26,7 @@ If you are including JXMagicObject in a project that uses Automatic Reference Co
 At initialization JXMagicObject take all values from the dictionary and populate instance variable, accordingly to the map scheme.
 
 If property key and dictionary key are the same, you have nothing to do, it just works.
-But sometimes you want a property key different, for exemple if you don't like those underscore there is in the dictionary's keys. 
+But sometimes you want a property key different, for example if you don't like those underscore which are in the dictionary's keys. 
 
 Just override **-setupMappings** and use **-mapProperty:toKey:**
 ```objective-c
@@ -39,7 +48,7 @@ For dynamic properties :
 
 ### Value Transformers
 
-JXMagicObject can automagically transform dictionary values to match your property declarations. You have nothing to do.
+JXMagicObject can automagically transform dictionary values to match your property declarations. **You have nothing to do.**
 Supported classes are **NSString, NSNumber, NSArray, NSDictionary, NSURL,** and **NSDate** (if the value is a timestamp).
 
 Supported types are : **int, float, double, BOOL, NSInteger, long, long long, NSInteger, CGFloat,** and **NSTimeInterval**.
@@ -56,7 +65,7 @@ But if you want to use another kind of object (NSDate, NSData, UIImage, CGRect, 
     [transformer release];
 ```
 
-## Usage Example
+## Example
 
 #### Setup
 Just subclass JXMagicObject and add your properties :
