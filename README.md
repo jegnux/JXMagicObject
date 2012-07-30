@@ -51,7 +51,7 @@ For dynamic properties :
 JXMagicObject can automagically transform dictionary values to match your property declarations. **You have nothing to do.**
 Supported classes are **NSString, NSNumber, NSArray, NSDictionary, NSURL,** and **NSDate** (if the value is a timestamp).
 
-Supported types are : **int, float, double, BOOL, NSInteger, long, long long, NSInteger, CGFloat,** and **NSTimeInterval**.
+Supported types are : **int, float, double, BOOL, long, long long, NSInteger, CGFloat,** and **NSTimeInterval**.
 
 Moreover if your property is a subclass of JXMagicObject, it will be automagically transformed too.
 
