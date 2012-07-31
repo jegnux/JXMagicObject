@@ -104,7 +104,7 @@
 {
     if (!objc_property)
         return nil;
-    
+
     self = [super init];
     if (self) {
         property = objc_property;
@@ -142,8 +142,7 @@
     NSString *getterString = [self name];
     
     for (NSString *attribute in [self attributes]) {
-        NSString *firstCharacter = [attribute substringToIndex:1];
-        if ([firstCharacter isEqualToString:@"G"]) {
+        if ([attribute hasPrefix:@"G"]) {
             getterString = [attribute substringFromIndex:1];
             break; // Break because it's the true getter, no need to go further.
         }
@@ -157,14 +156,13 @@
     NSString *setterString = [self name];
     
     for (NSString *attribute in [self attributes]) {
-        NSString *firstCharacter = [attribute substringToIndex:1];
-        if ([firstCharacter isEqualToString:@"S"]) {
+        if ([attribute hasPrefix:@"S"]) {
             setterString = [attribute substringFromIndex:1];
             break; // Break because it's the true setter, no need to go further.
         }
     }
     
-    if ([setterString rangeOfString:@":"].location == NSNotFound) { // true setter was not found so ":" is missing.
+    if ([setterString hasSuffix:@":"] == NO) { // true setter was not found so ":" is missing.
         setterString = [NSString stringWithFormat:@"set%@%@:",[[setterString substringToIndex:1] uppercaseString], [setterString substringFromIndex:1]];
     }
     
@@ -212,10 +210,8 @@
 
 - (NSString *) returnTypeString
 {
-    for (NSString *attribute in [self attributes]) {
-        NSString *firstCharacter = [attribute substringToIndex:1];
-        
-        if ([firstCharacter isEqualToString:@"T"]) {
+    for (NSString *attribute in [self attributes]) {        
+        if ([attribute hasPrefix:@"T"]) {
             return [attribute substringFromIndex:1];
         }
     }
@@ -324,16 +320,16 @@
         else if ([asObjectClass isSubclassOfClass:[NSNumber class]] || [validNumberTypes containsObject:asObjectTypeString]) {
             
             if ([[dictionaryValue lowercaseString] isEqualToString:@"yes"] || [[dictionaryValue lowercaseString] isEqualToString:@"true"]) {
-                *propertyValue = [NSNumber numberWithBool:YES];
+                dictionaryValue = [NSNumber numberWithBool:YES];
             }
             else if ([[dictionaryValue lowercaseString] isEqualToString:@"no"] || [[dictionaryValue lowercaseString] isEqualToString:@"false"]) {
-                *propertyValue = [NSNumber numberWithBool:NO];
+                dictionaryValue = [NSNumber numberWithBool:NO];
             }
             else if ([dictionaryValue rangeOfString:@"."].location != NSNotFound) {
-                *propertyValue = [NSNumber numberWithDouble:[dictionaryValue doubleValue]];
+                dictionaryValue = [NSNumber numberWithDouble:[dictionaryValue doubleValue]];
             }
             else {
-                *propertyValue = [NSNumber numberWithInteger:[dictionaryValue integerValue]];
+                dictionaryValue = [NSNumber numberWithInteger:[dictionaryValue integerValue]];
             }
             
             asDictionaryClass = [NSNumber class];
@@ -368,8 +364,6 @@
         else {
             *propertyValue = number;
         }
-        
-        [number release];
     }
     
     if (*propertyValue == nil && strncmp(asObjectType, @encode(BOOL), 1) != 0) // BOOL "NO" point on nil so...
@@ -531,68 +525,66 @@
 
 @property (nonatomic, retain) NSMutableArray *propertyMappings;
 
-- (void) _addPropertyMapping:(JXPropertyMapping *)propertyMapping;
-- (void) _performMappingsFromDictionary;
-
-- (JXPropertyMapping *) _propertyMappingForPropertyKey:(NSString *)key;
-- (JXPropertyMapping *) _propertyMappingForDictionaryKey:(NSString *)key;
-
 @end
 
 #pragma clang diagnostic ignored "-Wincomplete-implementation"
 @implementation JXMagicObject
 {
     BOOL shouldUpdateDictionary;
+    NSArray *_properties;
 }
 
 /* Private Accessors */
-@synthesize propertyMappings;
+@synthesize propertyMappings = _propertyMappings;
 
 /* Public Accessors */
-@synthesize dictionary;
+@synthesize dictionary = _dictionary;
 
 
 #pragma mark - Init
+
+- (id)init
+{
+    return [self initWithDictionary:nil];
+}
 
 - (id)initWithDictionary:(NSDictionary *)aDictionary
 {
     self = [super init];
     if (self) {
 
-        propertyMappings = [[NSMutableArray alloc] init];
-        dictionary = aDictionary ? [aDictionary mutableCopy] : [[NSMutableDictionary alloc] init];
+        _propertyMappings = [[NSMutableArray alloc] init];
+        _dictionary = aDictionary ? [aDictionary mutableCopy] : [[NSMutableDictionary alloc] init];
         
         if ([self respondsToSelector:@selector(setupMappings)]) { // Implemented by subclasses.
             [self setupMappings]; 
         }
         
-        [self _performMappingsFromDictionary];
+        [self _setupDefaultMappings];
+        [self _populateIvarsFromDictionary];
     }
     return self;
 }
 
 #pragma mark - Setup
 
-- (void) _performMappingsFromDictionary
+- (void) _setupDefaultMappings
 {
-    NSArray *classProperties = [JXProperty allPropertiesForClass:[self class]];
-    for (JXProperty *property in classProperties) {
+    for (JXProperty *property in [self _properties]) {
         
         NSString *name = [property name];
         
         JXPropertyMapping *propertyMapping = [self _propertyMappingForPropertyKey:name];
         
         if (!propertyMapping) {
-            propertyMapping = [JXPropertyMapping propertyMappingWithProperty:property
-                                                               dictionaryKey:name
-                                                             dictionaryClass:[[dictionary objectForKey:name] class]
-                                                            valueTransformer:nil];
-            [self _addPropertyMapping:propertyMapping];
+            propertyMapping = [self _mapProperty:property toDictionaryKey:name usingValueTransformer:nil];
         }
     }
-    
-    
-    NSDictionary *copy = [dictionary copy];
+}
+
+- (void) _populateIvarsFromDictionary
+{
+    NSDictionary *copy = [_dictionary copy];
     
     for(NSString *key in copy) {
         JXPropertyMapping *propertyMapping = [self _propertyMappingForDictionaryKey:key];
@@ -605,7 +597,7 @@
         
         if (Ivar != nil)
         {
-            id transformedObject = [self transformedValueForKey:key];
+            id transformedObject = [self _transformedValueForKey:key];
             id finalObject = transformedObject;
             
             if ([propertyMapping.property returnClass] != nil) {
@@ -616,7 +608,7 @@
                 }
             }
             
-            object_setIvar(self, Ivar, transformedObject);
+            object_setIvar(self, Ivar, finalObject);
         }
         else {
             NSLog(@"%@ is not Key-Value coding compliant for the key \"%@\".", NSStringFromClass([self class]), key);
@@ -631,36 +623,25 @@
 {
     if (shouldUpdateDictionary == NO)
         goto returnDictionary;
-    
-    NSArray *classProperties = [JXProperty allPropertiesForClass:[self class]];
-        
-    for (JXProperty *property in classProperties) {
+            
+    for (JXProperty *property in [self _properties]) {
         if ([property isDynamic])
             continue;
         
         Ivar Ivar = [property IvarForObject:self];
-        NSString *key = [NSString stringWithCString:ivar_getName(Ivar)
-                                           encoding:NSUTF8StringEncoding];
+        
+        NSString *key = [property name];
         
         JXPropertyMapping *propertyMapping = [self _propertyMappingForPropertyKey:key];
         
-        
-        if (!propertyMapping) {
-            propertyMapping = [JXPropertyMapping propertyMappingWithProperty:property
-                                                               dictionaryKey:key
-                                                             dictionaryClass:[[dictionary objectForKey:key] class]
-                                                            valueTransformer:nil];
-            [self _addPropertyMapping:propertyMapping];
-        }
-        
         id transformedValue = object_getIvar(self, Ivar);
-        [self setTransformedValue:transformedValue forKey:propertyMapping.dictionaryKey];        
+        [self _setTransformedValue:transformedValue forKey:propertyMapping.dictionaryKey];        
     }
     
     shouldUpdateDictionary = NO;
     
 returnDictionary:
-    return [NSDictionary dictionaryWithDictionary:dictionary];
+    return [NSDictionary dictionaryWithDictionary:_dictionary];
 }
 
 #pragma mark - Message Forwarding
@@ -673,10 +654,10 @@ returnDictionary:
     NSString *selectorString = NSStringFromSelector(aSelector);
     
     if ([getters containsObject:selectorString]) {
-        return [self methodSignatureForSelector:@selector(transformedValueForKey:)];
+        return [self methodSignatureForSelector:@selector(_transformedValueForKey:)];
     }
     else if ([setters containsObject:selectorString]) {
-        return [self methodSignatureForSelector:@selector(setTransformedValue:forKey:)];
+        return [self methodSignatureForSelector:@selector(_setTransformedValue:forKey:)];
     }
     
     return [super methodSignatureForSelector:aSelector];
@@ -695,7 +676,7 @@ returnDictionary:
         
         NSString *key = propertyMapping.dictionaryKey;
         
-        [anInvocation setSelector:@selector(transformedValueForKey:)];
+        [anInvocation setSelector:@selector(_transformedValueForKey:)];
         [anInvocation setArgument:&key atIndex:2];
 
         [anInvocation invoke];
@@ -705,7 +686,7 @@ returnDictionary:
 
         NSString *key = propertyMapping.dictionaryKey;
 
-        [anInvocation setSelector:@selector(setTransformedValue:forKey:)];
+        [anInvocation setSelector:@selector(_setTransformedValue:forKey:)];
         [anInvocation setArgument:&key atIndex:3];
         
         [anInvocation invoke];
@@ -717,6 +698,14 @@ returnDictionary:
 
 
 #pragma mark - Accessing to property mappings
+
+- (NSArray *)_properties
+{
+    if (!_properties) {
+        _properties = [[JXProperty allPropertiesForClass:[self class]] retain];
+    }
+    return _properties;
+}
 
 - (JXPropertyMapping *) _propertyMappingForPropertyKey:(NSString *)key
 {
@@ -752,38 +741,38 @@ returnDictionary:
     }
 }
 
-- (void) mapProperty:(NSString *)propertyKey toKey:(NSString *)dictionaryKey
+- (void) mapPropertyKey:(NSString *)propertyKey toDictionaryKey:(NSString *)dictionaryKey
 {
-    [self mapProperty:propertyKey toKey:dictionaryKey usingValueTransformer:nil];
+    [self mapPropertyKey:propertyKey toDictionaryKey:dictionaryKey usingValueTransformer:nil];
 }
 
-- (void) mapProperty:(NSString *)propertyKey toKey:(NSString *)dictionaryKey usingValueTransformer:(NSValueTransformer *)valueTransformer
+- (void) mapPropertyKey:(NSString *)propertyKey toDictionaryKey:(NSString *)dictionaryKey usingValueTransformer:(NSValueTransformer *)valueTransformer
 {
-    JXPropertyMapping *propertyMapping = [JXPropertyMapping propertyMappingWithProperty:[JXProperty propertyForClass:[self class] withName:propertyKey]
-                                                                          dictionaryKey:dictionaryKey
-                                                                        dictionaryClass:[[dictionary objectForKey:dictionaryKey] class]
+    [self _mapProperty:[self _propertyForKey:propertyKey] toDictionaryKey:dictionaryKey usingValueTransformer:valueTransformer];
+}
+
+- (JXPropertyMapping *) _mapProperty:(JXProperty *)property toDictionaryKey:(NSString *)dictionaryKey usingValueTransformer:(NSValueTransformer *)valueTransformer
+{
+    NSString *propertyKey = [property name];
+    NSString *finalDictionaryKey = dictionaryKey;
+    if ([propertyKey isEqualToString:dictionaryKey] && [self respondsToSelector:@selector(dictionaryKeyForPropertyKey:)])
+        finalDictionaryKey = [self dictionaryKeyForPropertyKey:dictionaryKey];
+    
+    JXPropertyMapping *propertyMapping = [JXPropertyMapping propertyMappingWithProperty:property
+                                                                          dictionaryKey:finalDictionaryKey
+                                                                        dictionaryClass:[[_dictionary objectForKey:dictionaryKey] class]
                                                                        valueTransformer:valueTransformer];
     [self _addPropertyMapping:propertyMapping];
+    
+    return propertyMapping;
 }
 
 #pragma mark - Utilities
 
-- (Ivar) IvarForKey:(NSString *)key
+- (JXProperty *) _propertyForKey:(NSString *)key
 {
-    JXProperty *property = [JXProperty propertyForClass:[self class] withName:key];
-    return [property IvarForObject:self];
-}
-
-- (SEL) getterForKey:(NSString *)key
-{
-    JXProperty *property = [JXProperty propertyForClass:[self class] withName:key];
-    return [property getter];
-}
-
-- (SEL) setterForKey:(NSString *)key
-{
-    JXProperty *property = [JXProperty propertyForClass:[self class] withName:key];
-    return [property setter];
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"name == %@",key];
+    return [[[self _properties] filteredArrayUsingPredicate:predicate] lastObject];
 }
 
 #pragma mark - KVO/KVC
@@ -795,11 +784,11 @@ returnDictionary:
     }
 }
 
-- (id) transformedValueForKey:(NSString *)key
+- (id) _transformedValueForKey:(NSString *)key
 {
     shouldUpdateDictionary = YES;
     JXPropertyMapping *propertyMapping = [self _propertyMappingForDictionaryKey:key];
-    id dictionaryValue = [dictionary objectForKey:key];
+    id dictionaryValue = [_dictionary objectForKey:key];
     
     if (dictionaryValue) {
         id propertyValue = nil;
@@ -810,25 +799,27 @@ returnDictionary:
     return nil;
 }
 
-- (void) setTransformedValue:(id)propertyValue forKey:(NSString *)key
+- (void) _setTransformedValue:(id)propertyValue forKey:(NSString *)key
 {
     shouldUpdateDictionary = YES;
     JXPropertyMapping *propertyMapping = [self _propertyMappingForDictionaryKey:key];
 
     id dictionaryValue = nil;
     [propertyMapping getDictionaryValue:&dictionaryValue fromPropertyValue:&propertyValue];
-    [dictionary setValue:dictionaryValue forKey:propertyMapping.dictionaryKey];
+    [_dictionary setValue:dictionaryValue forKey:propertyMapping.dictionaryKey];
 }
 
 #pragma mark - Memory Management
 
 - (void)dealloc
 {
-    for (JXPropertyMapping *propertyMapping in propertyMappings) {
+    for (JXPropertyMapping *propertyMapping in _propertyMappings) {
         [self removeObserver:self forKeyPath:[propertyMapping.property name]];
     }
-    [dictionary release];
-    [propertyMappings release];
+    
+    [_properties release];
+    [_dictionary release];
+    [_propertyMappings release];
     [super dealloc];
 }
 

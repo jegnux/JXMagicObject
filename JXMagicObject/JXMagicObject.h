@@ -31,12 +31,14 @@
 
 - (id) initWithDictionary:(NSDictionary *)aDictionary;
 
+/* Methods to Override */
 - (void) setupMappings;
+- (NSString *) dictionaryKeyForPropertyKey:(NSString *)propertyKey;
 
+/* Manage Mapping */
+- (void) mapPropertyKey:(NSString *)propertyKey toDictionaryKey:(NSString *)dictionaryKey;
+- (void) mapPropertyKey:(NSString *)propertyKey toDictionaryKey:(NSString *)dictionaryKey usingValueTransformer:(NSValueTransformer *)valueTransformer;
 - (void) removePropertyMappingForPropertyKey:(NSString *)propertyKey;
-
-- (void) mapProperty:(NSString *)propertyKey toKey:(NSString *)dictionaryKey;
-- (void) mapProperty:(NSString *)propertyKey toKey:(NSString *)dictionaryKey usingValueTransformer:(NSValueTransformer *)valueTransformer;
 
 @end
 

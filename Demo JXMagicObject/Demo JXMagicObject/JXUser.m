@@ -35,12 +35,12 @@
 - (void) setupMappings
 {
     // keys are different
-    [self mapProperty:@"firstName" toKey:@"name"];
-    [self mapProperty:@"favoriteNumber" toKey:@"favorite_number"];
+    [self mapPropertyKey:@"firstName" toDictionaryKey:@"name"];
+    [self mapPropertyKey:@"favoriteNumber" toDictionaryKey:@"favorite_number"];
 
     // you need a specific transformation
     JXStringToDateValueTransformer *transformer = [[JXStringToDateValueTransformer alloc] init];
-    [self mapProperty:@"birthdate" toKey:@"birth_date" usingValueTransformer:transformer];
+    [self mapPropertyKey:@"birthdate" toDictionaryKey:@"birth_date" usingValueTransformer:transformer];
     [transformer release];
 }
 

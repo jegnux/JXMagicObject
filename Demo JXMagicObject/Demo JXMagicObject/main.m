@@ -53,19 +53,19 @@ int main(int argc, const char * argv[])
         NSLog(@"Github Account URL : %@",user.githubAccount.url);
         
         NSLog(@"Available ? %@",[user isHireable] ? @"YES" : @"NO");
-
+        
         
         user.favoriteNumber = 1337;
         user.hireable = YES;
+        user.birthdate = [NSDate date];
         
         NSLog(@"Available ? %@",[user isHireable] ? @"YES" : @"NO");
-
+        
         user.githubAccount.currentRepository = @"JXMagicObject";
         
         NSLog(@"Final Dictionary : %@", [user dictionary]);
         
         [user release];
-        
     }
     return 0;
 }

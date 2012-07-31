@@ -30,7 +30,7 @@
 
 @property (nonatomic, retain) NSString *firstName;
 @property (nonatomic, retain) NSString *lastName;
-@property (nonatomic, retain) NSDate *birthdate;
+@property (nonatomic, copy) NSDate *birthdate;
 @property (nonatomic, assign) NSInteger favoriteNumber;
 @property (nonatomic, assign, getter = isHireable) BOOL hireable;
 @property (nonatomic, retain) JXGithubAccount *githubAccount;
