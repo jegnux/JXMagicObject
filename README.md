@@ -28,9 +28,9 @@ At initialization JXMagicObject take all values from the dictionary and populate
 If property key and dictionary key are the same, you have nothing to do, it just works.
 But sometimes you want a property key different, for example if you don't like those underscore which are in the dictionary's keys. 
 
-Just override **-setupMappings** and use **-mapProperty:toKey:**
+Just override **-setupMappings** and use **-mapPropertyKey:toDictionaryKey:**
 ```objective-c
-[self mapProperty:@"favoriteNumber" toKey:@"favorite_number"];
+[self mapPropertyKey:@"favoriteNumber" toDictionaryKey:@"favorite_number"];
 ```
 
 ### Dynamic vs Synthesized properties
@@ -60,7 +60,7 @@ But if you want to use another kind of object (NSDate, NSData, UIImage, CGRect, 
 ```objective-c
     JXStringToDateValueTransformer *transformer = [JXStringToDateValueTransformer new];
     
-    [self mapProperty:@"birthdate" toKey:@"birth_date" usingValueTransformer:transformer];
+    [self mapPropertyKey:@"birthdate" toDictionaryKey:@"birth_date" usingValueTransformer:transformer];
     
     [transformer release];
 ```
@@ -107,13 +107,13 @@ Then setup your mappings if needed by overriding **-setupMapings** :
 - (void) setupMappings
 {
     // keys are different
-    [self mapProperty:@"firstName" toKey:@"name"];
-    [self mapProperty:@"favoriteNumber" toKey:@"favorite_number"];
+    [self mapPropertyKey:@"firstName" toDictionaryKey:@"name"];
+    [self mapPropertyKey:@"favoriteNumber" toDictionaryKey:@"favorite_number"];
 
     // you need a specific transformation
     JXStringToDateValueTransformer *transformer = [[JXStringToDateValueTransformer alloc] init];
     
-    [self mapProperty:@"birthdate" toKey:@"birth_date" usingValueTransformer:transformer];
+    [self mapPropertyKey:@"birthdate" toDictionaryKey:@"birth_date" usingValueTransformer:transformer];
     
     [transformer release];
 }
