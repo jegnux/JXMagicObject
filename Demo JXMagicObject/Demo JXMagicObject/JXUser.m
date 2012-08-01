@@ -32,7 +32,7 @@
 @dynamic favoriteNumber, hireable;
 
 // Setup mappings if :
-- (void) setupMappings
++ (void) setupMappings
 {
     // keys are different
     [self mapPropertyKey:@"firstName" toDictionaryKey:@"name"];

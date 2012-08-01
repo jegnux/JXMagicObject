@@ -255,33 +255,29 @@
 
 @property (nonatomic, retain) JXProperty *property;
 @property (nonatomic, retain) NSString *dictionaryKey;
-@property (nonatomic, assign) Class dictionaryClass;
 @property (nonatomic, retain) NSValueTransformer *valueTransformer;
 
 + (JXPropertyMapping *) propertyMappingWithProperty:(JXProperty *)aKey
                                       dictionaryKey:(NSString *)anOtherKey
-                                    dictionaryClass:(Class)aClass
                                    valueTransformer:(NSValueTransformer *)aValueTransformer;
 
 
 - (void) getPropertyValue:(id *)propertyValue fromDictionaryValue:(id *)dictionaryPointerValue;
-- (void) getDictionaryValue:(id *)dictionaryValue fromPropertyValue:(id *)pointerPropertyValue;
+- (void) getDictionaryValue:(id *)dictionaryValue fromPropertyValue:(id *)pointerPropertyValue asClass:(Class)class;
 
 @end
 
 @implementation JXPropertyMapping
 
-@synthesize property, dictionaryKey, dictionaryClass, valueTransformer;
+@synthesize property, dictionaryKey, valueTransformer;
 
 + (JXPropertyMapping *) propertyMappingWithProperty:(JXProperty *)aProperty
                                       dictionaryKey:(NSString *)aKey
-                                    dictionaryClass:(Class)aClass
                                    valueTransformer:(NSValueTransformer *)aValueTransformer
 {
     JXPropertyMapping *propertyMapping = [[JXPropertyMapping alloc] init];
     propertyMapping.property = aProperty;
     propertyMapping.dictionaryKey = aKey;
-    propertyMapping.dictionaryClass = aClass;
     propertyMapping.valueTransformer = aValueTransformer;
     return [propertyMapping autorelease];
 }
@@ -379,11 +375,11 @@
 
 }
 
-- (void) getDictionaryValue:(id *)dictionaryValue fromPropertyValue:(id *)pointerPropertyValue
+- (void) getDictionaryValue:(id *)dictionaryValue fromPropertyValue:(id *)pointerPropertyValue asClass:(Class)class
 {
     id propertyValue = *pointerPropertyValue;
     
-    Class asDictionaryClass = self.dictionaryClass ? self.dictionaryClass : [NSString class];
+    Class asDictionaryClass = class ? class : [NSString class];
     Class asObjectClass = [self.property returnClass];
     const char *asObjectType = [self.property returnType];
 
@@ -511,6 +507,7 @@
 
 - (void)dealloc
 {
+    NSLog(@"DEALLOC %@",self);
     [property release];
     [dictionaryKey release];
     [valueTransformer release];
@@ -531,17 +528,56 @@
 @implementation JXMagicObject
 {
     BOOL shouldUpdateDictionary;
-    NSArray *_properties;
 }
-
-/* Private Accessors */
-@synthesize propertyMappings = _propertyMappings;
 
 /* Public Accessors */
 @synthesize dictionary = _dictionary;
-
+@synthesize originalDictionary = _originalDictionary;
 
 #pragma mark - Init
+
+static const char *propertiesKey;
+static const char *propertyMappingsKey;
+
+void _throwForbiddenOperationException(id self, SEL _cmd)
+{
+    NSString *exceptionString = [NSString stringWithFormat:@"You are not allowed to send the message '%@' at this time.", NSStringFromSelector(_cmd)];
+  
+    @throw [NSException exceptionWithName:@"JXForbiddenOperation"
+                                   reason:exceptionString
+                                 userInfo:nil];
+}
+
++ (void) initialize
+{
+    NSString *className = NSStringFromClass([self class]);
+    if ([className hasPrefix:@"NSKVONotifying"] || [[self superclass] isSubclassOfClass:[JXMagicObject class]] == NO)
+        return;
+    
+    NSArray *properties = [[JXProperty allPropertiesForClass:[self class]] retain];
+
+    objc_setAssociatedObject([self class], &propertiesKey, properties, OBJC_ASSOCIATION_RETAIN);
+    objc_setAssociatedObject([self class], &propertyMappingsKey, [NSMutableArray array], OBJC_ASSOCIATION_RETAIN);
+    
+    if ([[self class] respondsToSelector:@selector(setupMappings)])
+        [[self class] setupMappings];
+
+    [[self class] _setupDefaultMappings];
+    
+    [self _invalidateMethodForSelector:@selector(setupMappings)];
+    [self _invalidateMethodForSelector:@selector(mapPropertyKey:toDictionaryKey:)];
+    [self _invalidateMethodForSelector:@selector(mapPropertyKey:toDictionaryKey:usingValueTransformer:)];
+}
+
++ (void) _invalidateMethodForSelector:(SEL)selector
+{
+    Method method = class_getClassMethod([self class], selector);
+    Class class = object_getClass((id)[self class]);
+    
+    if(class_addMethod(class, selector, (IMP) _throwForbiddenOperationException, "v@:") == NO) {
+        method_setImplementation(method, (IMP) _throwForbiddenOperationException);
+    }
+}
 
 - (id)init
 {
@@ -550,17 +586,17 @@
 
 - (id)initWithDictionary:(NSDictionary *)aDictionary
 {
+    NSAssert([[self class] _properties], @"Initialization Error. It seems you've override +initialize without calling [super initialize].");
+    
     self = [super init];
     if (self) {
-
         _propertyMappings = [[NSMutableArray alloc] init];
         _dictionary = aDictionary ? [aDictionary mutableCopy] : [[NSMutableDictionary alloc] init];
-        
-        if ([self respondsToSelector:@selector(setupMappings)]) { // Implemented by subclasses.
-            [self setupMappings]; 
-        }
-        
-        [self _setupDefaultMappings];
+        _originalDictionary = [aDictionary copy];
+
+        for (JXProperty *property in [[self class] _properties])
+            [self addObserver:self forKeyPath:[property name] options:NSKeyValueObservingOptionNew context:nil];
+
         [self _populateIvarsFromDictionary];
     }
     return self;
@@ -568,7 +604,7 @@
 
 #pragma mark - Setup
 
-- (void) _setupDefaultMappings
++ (void) _setupDefaultMappings
 {
     for (JXProperty *property in [self _properties]) {
         
@@ -577,17 +613,15 @@
         JXPropertyMapping *propertyMapping = [self _propertyMappingForPropertyKey:name];
         
         if (!propertyMapping) {
-            propertyMapping = [self _mapProperty:property toDictionaryKey:name usingValueTransformer:nil];
+            [self _mapProperty:property toDictionaryKey:name usingValueTransformer:nil];
         }
     }
 }
 
 - (void) _populateIvarsFromDictionary
 {
-    NSDictionary *copy = [_dictionary copy];
-    
-    for(NSString *key in copy) {
-        JXPropertyMapping *propertyMapping = [self _propertyMappingForDictionaryKey:key];
+    for(NSString *key in _originalDictionary) {
+        JXPropertyMapping *propertyMapping = [[self class] _propertyMappingForDictionaryKey:key];
         
         if ([propertyMapping.property isDynamic]) {
             continue;
@@ -613,9 +647,7 @@
         else {
             NSLog(@"%@ is not Key-Value coding compliant for the key \"%@\".", NSStringFromClass([self class]), key);
         }
-    }
-    [copy release];
-    
+    }    
     shouldUpdateDictionary = YES;
 }
 
@@ -624,7 +656,7 @@
     if (shouldUpdateDictionary == NO)
         goto returnDictionary;
             
-    for (JXProperty *property in [self _properties]) {
+    for (JXProperty *property in [[self class] _properties]) {
         if ([property isDynamic])
             continue;
         
@@ -632,7 +664,7 @@
         
         NSString *key = [property name];
         
-        JXPropertyMapping *propertyMapping = [self _propertyMappingForPropertyKey:key];
+        JXPropertyMapping *propertyMapping = [[self class] _propertyMappingForPropertyKey:key];
         
         id transformedValue = object_getIvar(self, Ivar);
         [self _setTransformedValue:transformedValue forKey:propertyMapping.dictionaryKey];        
@@ -648,8 +680,8 @@ returnDictionary:
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    NSArray *getters = [self.propertyMappings valueForKeyPath:@"@unionOfObjects.property.getterString"];
-    NSArray *setters = [self.propertyMappings valueForKeyPath:@"@unionOfObjects.property.setterString"];
+    NSArray *getters = [[[self class] _propertyMappings] valueForKeyPath:@"@unionOfObjects.property.getterString"];
+    NSArray *setters = [[[self class] _propertyMappings] valueForKeyPath:@"@unionOfObjects.property.setterString"];
     
     NSString *selectorString = NSStringFromSelector(aSelector);
     
@@ -659,6 +691,9 @@ returnDictionary:
     else if ([setters containsObject:selectorString]) {
         return [self methodSignatureForSelector:@selector(_setTransformedValue:forKey:)];
     }
+    else if ([[self class] respondsToSelector:aSelector]){
+        return [[self class] methodSignatureForSelector:aSelector];
+    }
     
     return [super methodSignatureForSelector:aSelector];
 }
@@ -666,13 +701,13 @@ returnDictionary:
 
 - (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    NSArray *getters = [self.propertyMappings valueForKeyPath:@"@unionOfObjects.property.getterString"];
-    NSArray *setters = [self.propertyMappings valueForKeyPath:@"@unionOfObjects.property.setterString"];
+    NSArray *getters = [[[self class] _propertyMappings] valueForKeyPath:@"@unionOfObjects.property.getterString"];
+    NSArray *setters = [[[self class] _propertyMappings] valueForKeyPath:@"@unionOfObjects.property.setterString"];
     
     NSString *selectorString = NSStringFromSelector(anInvocation.selector);
     
     if ([getters containsObject:selectorString]) {
-        JXPropertyMapping *propertyMapping = [self.propertyMappings objectAtIndex:[getters indexOfObject:selectorString]];
+        JXPropertyMapping *propertyMapping = [[[self class] _propertyMappings] objectAtIndex:[getters indexOfObject:selectorString]];
         
         NSString *key = propertyMapping.dictionaryKey;
         
@@ -682,7 +717,7 @@ returnDictionary:
         [anInvocation invoke];
     }
     else if ([setters containsObject:selectorString]) {
-        JXPropertyMapping *propertyMapping = [self.propertyMappings objectAtIndex:[setters indexOfObject:selectorString]];
+        JXPropertyMapping *propertyMapping = [[[self class] _propertyMappings] objectAtIndex:[setters indexOfObject:selectorString]];
 
         NSString *key = propertyMapping.dictionaryKey;
 
@@ -690,6 +725,9 @@ returnDictionary:
         [anInvocation setArgument:&key atIndex:3];
         
         [anInvocation invoke];
+    }
+    else if ([[self class] respondsToSelector:[anInvocation selector]]){
+        return [anInvocation invokeWithTarget:[self class]];
     }
     else {
         [super forwardInvocation:anInvocation];
@@ -699,59 +737,53 @@ returnDictionary:
 
 #pragma mark - Accessing to property mappings
 
-- (NSArray *)_properties
++ (NSArray *)_properties
 {
-    if (!_properties) {
-        _properties = [[JXProperty allPropertiesForClass:[self class]] retain];
-    }
-    return _properties;
+    return objc_getAssociatedObject([self class], &propertiesKey);
 }
 
-- (JXPropertyMapping *) _propertyMappingForPropertyKey:(NSString *)key
++ (NSMutableArray *)_propertyMappings
+{
+    return objc_getAssociatedObject([self class], &propertyMappingsKey);
+}
+
++ (JXPropertyMapping *) _propertyMappingForPropertyKey:(NSString *)key
 {
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"property.name == %@",key];
-    return [[self.propertyMappings filteredArrayUsingPredicate:predicate] lastObject];
+    return [[[self _propertyMappings] filteredArrayUsingPredicate:predicate] lastObject];
 }
 
-- (JXPropertyMapping *) _propertyMappingForDictionaryKey:(NSString *)key
++ (JXPropertyMapping *) _propertyMappingForDictionaryKey:(NSString *)key
 {
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"dictionaryKey == %@",key];
-    return [[self.propertyMappings filteredArrayUsingPredicate:predicate] lastObject];
+    return [[[self _propertyMappings] filteredArrayUsingPredicate:predicate] lastObject];
 }
 
 #pragma mark - Mapping Methods
 
-- (void) _addPropertyMapping:(JXPropertyMapping *)propertyMapping
++ (void) _addPropertyMapping:(JXPropertyMapping *)propertyMapping
 {
     NSString *propertyName = [propertyMapping.property name];
     
-    [self removePropertyMappingForPropertyKey:propertyName];
-    
-    [self addObserver:self forKeyPath:propertyName options:NSKeyValueObservingOptionNew context:nil];
-    
-    [self.propertyMappings addObject:propertyMapping];
-}
-
-- (void) removePropertyMappingForPropertyKey:(NSString *)propertyKey
-{    
-    JXPropertyMapping *propertyMapping = [self _propertyMappingForPropertyKey:propertyKey];
-    if (propertyMapping) {
-        [self removeObserver:self forKeyPath:propertyKey];
-        [self.propertyMappings removeObject:propertyMapping];
+    JXPropertyMapping *oldPropertyMapping = [self _propertyMappingForPropertyKey:propertyName];
+    if (oldPropertyMapping) {
+        [[self _propertyMappings] removeObject:oldPropertyMapping];
     }
+        
+    [[self _propertyMappings] addObject:propertyMapping];
 }
 
-- (void) mapPropertyKey:(NSString *)propertyKey toDictionaryKey:(NSString *)dictionaryKey
++ (void) mapPropertyKey:(NSString *)propertyKey toDictionaryKey:(NSString *)dictionaryKey
 {
     [self mapPropertyKey:propertyKey toDictionaryKey:dictionaryKey usingValueTransformer:nil];
 }
 
-- (void) mapPropertyKey:(NSString *)propertyKey toDictionaryKey:(NSString *)dictionaryKey usingValueTransformer:(NSValueTransformer *)valueTransformer
++ (void) mapPropertyKey:(NSString *)propertyKey toDictionaryKey:(NSString *)dictionaryKey usingValueTransformer:(NSValueTransformer *)valueTransformer
 {
     [self _mapProperty:[self _propertyForKey:propertyKey] toDictionaryKey:dictionaryKey usingValueTransformer:valueTransformer];
 }
 
-- (JXPropertyMapping *) _mapProperty:(JXProperty *)property toDictionaryKey:(NSString *)dictionaryKey usingValueTransformer:(NSValueTransformer *)valueTransformer
++ (JXPropertyMapping *) _mapProperty:(JXProperty *)property toDictionaryKey:(NSString *)dictionaryKey usingValueTransformer:(NSValueTransformer *)valueTransformer
 {
     NSString *propertyKey = [property name];
     NSString *finalDictionaryKey = dictionaryKey;
@@ -760,7 +792,6 @@ returnDictionary:
     
     JXPropertyMapping *propertyMapping = [JXPropertyMapping propertyMappingWithProperty:property
                                                                           dictionaryKey:finalDictionaryKey
-                                                                        dictionaryClass:[[_dictionary objectForKey:dictionaryKey] class]
                                                                        valueTransformer:valueTransformer];
     [self _addPropertyMapping:propertyMapping];
     
@@ -769,7 +800,7 @@ returnDictionary:
 
 #pragma mark - Utilities
 
-- (JXProperty *) _propertyForKey:(NSString *)key
++ (JXProperty *) _propertyForKey:(NSString *)key
 {
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"name == %@",key];
     return [[[self _properties] filteredArrayUsingPredicate:predicate] lastObject];
@@ -779,7 +810,7 @@ returnDictionary:
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if ([self _propertyMappingForPropertyKey:keyPath]) {
+    if ([[self class] _propertyMappingForPropertyKey:keyPath]) {
         shouldUpdateDictionary = YES;
     }
 }
@@ -787,7 +818,7 @@ returnDictionary:
 - (id) _transformedValueForKey:(NSString *)key
 {
     shouldUpdateDictionary = YES;
-    JXPropertyMapping *propertyMapping = [self _propertyMappingForDictionaryKey:key];
+    JXPropertyMapping *propertyMapping = [[self class] _propertyMappingForDictionaryKey:key];
     id dictionaryValue = [_dictionary objectForKey:key];
     
     if (dictionaryValue) {
@@ -802,10 +833,13 @@ returnDictionary:
 - (void) _setTransformedValue:(id)propertyValue forKey:(NSString *)key
 {
     shouldUpdateDictionary = YES;
-    JXPropertyMapping *propertyMapping = [self _propertyMappingForDictionaryKey:key];
+    JXPropertyMapping *propertyMapping = [[self class] _propertyMappingForDictionaryKey:key];
 
     id dictionaryValue = nil;
-    [propertyMapping getDictionaryValue:&dictionaryValue fromPropertyValue:&propertyValue];
+    [propertyMapping getDictionaryValue:&dictionaryValue
+                      fromPropertyValue:&propertyValue
+                                asClass:[[_dictionary objectForKey:key] class]];
+    
     [_dictionary setValue:dictionaryValue forKey:propertyMapping.dictionaryKey];
 }
 
@@ -813,12 +847,12 @@ returnDictionary:
 
 - (void)dealloc
 {
-    for (JXPropertyMapping *propertyMapping in _propertyMappings) {
-        [self removeObserver:self forKeyPath:[propertyMapping.property name]];
+    for (JXProperty *property in [[self class] _properties]) {
+        [self removeObserver:self forKeyPath:[property name]];
     }
     
-    [_properties release];
     [_dictionary release];
+    [_originalDictionary release];
     [_propertyMappings release];
     [super dealloc];
 }

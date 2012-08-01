@@ -43,7 +43,7 @@ int main(int argc, const char * argv[])
                                   githubAccountDict, @"githubAccount", nil];
         
         JXUser *user = [[JXUser alloc] initWithDictionary:userDict];
-        
+
         NSLog(@"Initial Dictionary : %@", [user dictionary]);
         
         NSLog(@"%@ %@", user.firstName, user.lastName);
@@ -53,7 +53,6 @@ int main(int argc, const char * argv[])
         NSLog(@"Github Account URL : %@",user.githubAccount.url);
         
         NSLog(@"Available ? %@",[user isHireable] ? @"YES" : @"NO");
-        
         
         user.favoriteNumber = 1337;
         user.hireable = YES;

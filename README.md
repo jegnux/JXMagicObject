@@ -2,9 +2,10 @@ JXMagicObject
 =============
 
 Magically map your dictionaries keys/values to a true object with properties.
+
 Instead of 
 ```objective-c
-[dictionary setObject:bar forKey:@"foo"];
+[dictionary setObject:[NSNumber numberWithInteger:bar] forKey:@"foo"];
 ```
 Just do 
 ```objective-c
@@ -28,7 +29,7 @@ At initialization JXMagicObject take all values from the dictionary and populate
 If property key and dictionary key are the same, you have nothing to do, it just works.
 But sometimes you want a property key different, for example if you don't like those underscore which are in the dictionary's keys. 
 
-Just override **-setupMappings** and use **-mapPropertyKey:toDictionaryKey:**
+Just override **+setupMappings** and use **+mapPropertyKey:toDictionaryKey:**
 ```objective-c
 [self mapPropertyKey:@"favoriteNumber" toDictionaryKey:@"favorite_number"];
 ```
@@ -58,11 +59,11 @@ Moreover if your property is a subclass of JXMagicObject, it will be automagical
 
 But if you want to use another kind of object (NSDate, NSData, UIImage, CGRect, whatever) you can use a [NSValueTransformer](http://developer.apple.com/library/mac/#documentation/Cocoa/Reference/Foundation/Classes/NSValueTransformer_Class/Reference/Reference.html) subclass and map your property using -mapProperty:toKey:usingValueTransformer:
 ```objective-c
-    JXStringToDateValueTransformer *transformer = [JXStringToDateValueTransformer new];
-    
-    [self mapPropertyKey:@"birthdate" toDictionaryKey:@"birth_date" usingValueTransformer:transformer];
-    
-    [transformer release];
+JXStringToDateValueTransformer *transformer = [JXStringToDateValueTransformer new];
+
+[self mapPropertyKey:@"birthdate" toDictionaryKey:@"birth_date" usingValueTransformer:transformer];
+
+[transformer release];
 ```
 
 ## Example
@@ -100,11 +101,11 @@ And write the implementation :
 @end
 ```
 
-Then setup your mappings if needed by overriding **-setupMapings** :
+Then setup your mappings if needed by overriding **+setupMapings** :
 
 ```objective-c
 // Setup mappings if :
-- (void) setupMappings
++ (void) setupMappings
 {
     // keys are different
     [self mapPropertyKey:@"firstName" toDictionaryKey:@"name"];
@@ -121,21 +122,21 @@ Then setup your mappings if needed by overriding **-setupMapings** :
 
 #####Now You can use it :
 ```objective-c
-        NSDictionary *userDict = [NSDictionary dictionaryWithObjectsAndKeys:
-                                  @"Jerome", @"name",
-                                  @"Alves", @"lastName",
-                                  @"42", @"favorite_number",
-                                  @"08/18/1989", @"birth_date", nil];
+NSDictionary *userDict = [NSDictionary dictionaryWithObjectsAndKeys:
+                          @"Jerome", @"name",
+                          @"Alves", @"lastName",
+                          @"42", @"favorite_number",
+                          @"08/18/1989", @"birth_date", nil];
 
-       JXUser *user = [[JXUser alloc] initWithDictionary:userDict];
- 
-        NSLog(@"%@ %@", user.firstName, user.lastName);
-        user.favoriteNumber = 1337;
-        user.birthDate = [NSDate date];
-        
-        NSLog(@"Dictionary : %@", [user dictionary]);
-        
-        [user release];
+JXUser *user = [[JXUser alloc] initWithDictionary:userDict];
+
+NSLog(@"%@ %@", user.firstName, user.lastName);
+user.favoriteNumber = 1337;
+user.birthDate = [NSDate date];
+
+NSLog(@"Dictionary : %@", [user dictionary]);
+
+[user release];
 ```
 Output : 
 ```objective-c

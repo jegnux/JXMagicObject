@@ -27,18 +27,18 @@
 
 @interface JXMagicObject : NSObject
 
-@property (nonatomic, readonly) NSDictionary *dictionary;
+@property (nonatomic, copy, readonly) NSDictionary *dictionary;
+@property (nonatomic, copy, readonly) NSDictionary *originalDictionary;
 
 - (id) initWithDictionary:(NSDictionary *)aDictionary;
 
 /* Methods to Override */
-- (void) setupMappings;
-- (NSString *) dictionaryKeyForPropertyKey:(NSString *)propertyKey;
++ (void) setupMappings;
++ (NSString *) dictionaryKeyForPropertyKey:(NSString *)propertyKey;
 
 /* Manage Mapping */
-- (void) mapPropertyKey:(NSString *)propertyKey toDictionaryKey:(NSString *)dictionaryKey;
-- (void) mapPropertyKey:(NSString *)propertyKey toDictionaryKey:(NSString *)dictionaryKey usingValueTransformer:(NSValueTransformer *)valueTransformer;
-- (void) removePropertyMappingForPropertyKey:(NSString *)propertyKey;
++ (void) mapPropertyKey:(NSString *)propertyKey toDictionaryKey:(NSString *)dictionaryKey;
++ (void) mapPropertyKey:(NSString *)propertyKey toDictionaryKey:(NSString *)dictionaryKey usingValueTransformer:(NSValueTransformer *)valueTransformer;
 
 @end
 
